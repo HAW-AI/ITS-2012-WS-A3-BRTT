@@ -33,10 +33,10 @@ object crypto {
     }
 
     def sign(key: PrivateKey, data: Array[Byte]): Array[Byte] = {
-      val signature = Signature.getInstance("SHA1withRSA")
-      signature.initSign(key)
-      signature.update(data)
-      signature.sign
+      val signer = Signature.getInstance("SHA1withRSA")
+      signer.initSign(key)
+      signer.update(data)
+      signer.sign
     }
 
     def verify(key: PublicKey, signature: Array[Byte], data: Array[Byte]): Boolean = {
