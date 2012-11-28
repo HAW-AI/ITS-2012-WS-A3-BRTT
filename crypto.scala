@@ -101,7 +101,7 @@ object crypto {
         val signature: Array[Byte] = Array.ofDim(signatureLength)
         stream.read(signature)
 
-        val dataLength = stream.available()
+        val dataLength = stream.available
         val data: Array[Byte] = Array.ofDim(dataLength)
         stream.read(data)
 
