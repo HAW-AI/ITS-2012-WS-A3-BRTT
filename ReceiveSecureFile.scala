@@ -19,5 +19,10 @@ object ReceiveSecureFile extends App {
   val secretKey = aes.decodeSecretKey(rsa.decrypt(privateKey, encryptedSecretKey))
   val data = aes.decrypt(secretKey, encryptedData)
 
-  io.writeFile(outputFile, data)
+  if (rsa.verify(publicKey, signature, secretKey.getEncoded)) {
+      io.writeFile(outputFile, data)
+  } else {
+    println("Could not verify signature!")
+    sys.exit(2)
+  }
 }

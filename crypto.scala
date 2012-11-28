@@ -40,10 +40,10 @@ object crypto {
     }
 
     def verify(key: PublicKey, signature: Array[Byte], data: Array[Byte]): Boolean = {
-      val signer = Signature.getInstance("SHA1withRSA")
-      signer.initVerify(key)
-      signer.update(signature)
-      signer.verify(data)
+      val verifier = Signature.getInstance("SHA1withRSA")
+      verifier.initVerify(key)
+      verifier.update(data)
+      verifier.verify(signature)
     }
   }
 
