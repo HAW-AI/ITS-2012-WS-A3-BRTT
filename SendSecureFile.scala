@@ -1,10 +1,10 @@
 import java.io._
 import java.security._
 import javax.crypto._
-import java.security.spec.PKCS8EncodedKeySpec
-import java.security.spec.X509EncodedKeySpec
 import javax.crypto.spec.SecretKeySpec
 import scala.io.Source
+
+import crypto._
 
 object SendSecureFile extends App {
   if (args.length != 4) {
@@ -17,8 +17,8 @@ object SendSecureFile extends App {
   val inputFile = args(2)
   val outputFile = args(3)
   
-  val privateKey = decodePrivateKey(readEncodedKey(privateKeyFile))
-  val publicKey = decodePublicKey(readEncodedKey(publicKeyFile))
+  val privateKey = readPrivateKey(privateKeyFile)
+  val publicKey = readPublicKey(publicKeyFile)
   
   val secretKey = generateSecretKey
   val signature = sign(secretKey.getEncoded, privateKey)
@@ -71,33 +71,6 @@ object SendSecureFile extends App {
     val generator = KeyGenerator.getInstance("AES")
     generator.init(128)
     generator.generateKey
-  }
-  
-  def decodePrivateKey(encodedKey : Array[Byte]) : PrivateKey = {
-    val spec = new PKCS8EncodedKeySpec(encodedKey)
-    val factory = KeyFactory.getInstance("RSA")
-    factory.generatePrivate(spec)
-  }
-  
-  def decodePublicKey(encodedKey : Array[Byte]) : PublicKey = {
-    val spec = new X509EncodedKeySpec(encodedKey)
-    val factory = KeyFactory.getInstance("RSA")
-    factory.generatePublic(spec)
-  }
-  
-  def readEncodedKey(filePath : String) : Array[Byte] = {
-    val dataStream = new DataInputStream(new FileInputStream(filePath))
-    
-    val nameLength = dataStream.readInt
-    dataStream.skip(nameLength)
-    
-    val keyLength = dataStream.readInt
-    val key : Array[Byte] = Array.ofDim(keyLength)
-    dataStream.read(key)
-    
-    dataStream.close
-
-    key
   }
   
   
