@@ -100,10 +100,8 @@ object crypto {
         val signatureLength = stream.readInt
         val signature: Array[Byte] = Array.ofDim(signatureLength)
         stream.read(signature)
-
-        val dataLength = stream.available
-        val data: Array[Byte] = Array.ofDim(dataLength)
-        stream.read(data)
+        
+        val data = readStream(stream)
 
         (key, signature, data)
       }
@@ -120,11 +118,13 @@ object crypto {
         stream.write(encryptedData)
       }
     }
+    
+    def readStream(stream : InputStream) : Array[Byte] = {
+      Stream.continually(stream.read()).takeWhile(-1 !=).map(_.toByte).toArray
+    }
 
     def readFile(filePath: String): Array[Byte] = {
-      withDataInputStream(filePath) { stream =>
-        Stream.fill(stream.available)(stream.readByte).toArray
-      }
+      withDataInputStream(filePath)(readStream)
     }
 
     def writeFile(filePath: String, data: Array[Byte]): Unit = {
