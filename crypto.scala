@@ -4,6 +4,7 @@ import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto._
 import javax.crypto.spec.SecretKeySpec
+import scala.collection.immutable.Stream
 
 object crypto {
   object rsa {
@@ -69,7 +70,7 @@ object crypto {
       new SecretKeySpec(encodedKey, "AES")
     }
   }
-  
+
   object io {
     def readPrivateKey(filePath: String): PrivateKey =
       rsa.decodePrivateKey(readEncodedRSAKey(filePath))
@@ -78,52 +79,70 @@ object crypto {
       rsa.decodePublicKey(readEncodedRSAKey(filePath))
 
     def readEncodedRSAKey(filePath: String): Array[Byte] = {
-      val dataStream = new DataInputStream(new FileInputStream(filePath))
+      withDataInputStream(filePath) { stream =>
+        val nameLength = stream.readInt
+        stream.skip(nameLength)
 
-      val nameLength = dataStream.readInt
-      dataStream.skip(nameLength)
+        val keyLength = stream.readInt
+        val key: Array[Byte] = Array.ofDim(keyLength)
+        stream.read(key)
 
-      val keyLength = dataStream.readInt
-      val key: Array[Byte] = Array.ofDim(keyLength)
-      dataStream.read(key)
-
-      dataStream.close
-
-      key
+        key
+      }
     }
 
     def readSecureFile(filePath: String): (Array[Byte], Array[Byte], Array[Byte]) = {
-      val dataStream = new DataInputStream(new FileInputStream(filePath))
+      withDataInputStream(filePath) { stream =>
+        val keyLength = stream.readInt
+        val key: Array[Byte] = Array.ofDim(keyLength)
+        stream.read(key)
 
-      val keyLength = dataStream.readInt
-      val key: Array[Byte] = Array.ofDim(keyLength)
-      dataStream.read(key)
+        val signatureLength = stream.readInt
+        val signature: Array[Byte] = Array.ofDim(signatureLength)
+        stream.read(signature)
 
-      val signatureLength = dataStream.readInt
-      val signature: Array[Byte] = Array.ofDim(signatureLength)
-      dataStream.read(signature)
+        val dataLength = stream.available()
+        val data: Array[Byte] = Array.ofDim(dataLength)
+        stream.read(data)
 
-      val dataLength = dataStream.available()
-      val data: Array[Byte] = Array.ofDim(dataLength)
-      dataStream.read(data)
-
-      dataStream.close
-
-      (key, signature, data)
+        (key, signature, data)
+      }
     }
 
     def writeSecureFile(encryptedSecretKey: Array[Byte], signature: Array[Byte], encryptedData: Array[Byte], filePath: String): Unit = {
-        val dataStream = new DataOutputStream(new FileOutputStream(filePath))
+      withDataOutputStream(filePath) { stream =>
+        stream.writeInt(encryptedSecretKey.length)
+        stream.write(encryptedSecretKey)
 
-        dataStream.writeInt(encryptedSecretKey.length)
-        dataStream.write(encryptedSecretKey)
+        stream.writeInt(signature.length)
+        stream.write(signature)
 
-        dataStream.writeInt(signature.length)
-        dataStream.write(signature)
-
-        dataStream.write(encryptedData)
-
-        dataStream.close
+        stream.write(encryptedData)
       }
+    }
+
+    def readFile(filePath: String): Array[Byte] = {
+      withDataInputStream(filePath) { stream =>
+        Stream.fill(stream.available)(stream.readByte).toArray
+      }
+    }
+
+    def writeFile(filePath: String, data: Array[Byte]): Unit = {
+      withDataOutputStream(filePath)(_.write(data))
+    }
+
+    def withDataInputStream[A](filePath: String)(f: DataInputStream => A): A = {
+      val stream = new DataInputStream(new FileInputStream(filePath))
+      val result = f(stream)
+      stream.close
+      result
+    }
+
+    def withDataOutputStream[A](filePath: String)(f: DataOutputStream => A): A = {
+      val stream = new DataOutputStream(new FileOutputStream(filePath))
+      val result = f(stream)
+      stream.close
+      result
+    }
   }
 }
