@@ -37,11 +37,9 @@ object SendSecureFile extends App {
   {
     val dataStream = new DataOutputStream(new FileOutputStream(filePath))
     
-    println(encryptedSecretKey.length)
     dataStream.writeInt(encryptedSecretKey.length)
     dataStream.write(encryptedSecretKey)
     
-    println(signature.length)
     dataStream.writeInt(signature.length)
     dataStream.write(signature)
     
