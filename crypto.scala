@@ -5,6 +5,7 @@ import java.security.spec.X509EncodedKeySpec
 import javax.crypto._
 import javax.crypto.spec.SecretKeySpec
 import scala.collection.immutable.Stream
+import scala.Function.const
 
 object crypto {
   object rsa {
@@ -100,7 +101,7 @@ object crypto {
         val signatureLength = stream.readInt
         val signature: Array[Byte] = Array.ofDim(signatureLength)
         stream.read(signature)
-        
+
         val data = readStream(stream)
 
         (key, signature, data)
@@ -118,7 +119,7 @@ object crypto {
         stream.write(encryptedData)
       }
     }
-    
+
     def readStream(stream : InputStream) : Array[Byte] = {
       Stream.continually(stream.read()).takeWhile(-1 !=).map(_.toByte).toArray
     }
@@ -131,18 +132,14 @@ object crypto {
       withDataOutputStream(filePath)(_.write(data))
     }
 
-    def withDataInputStream[A](filePath: String)(f: DataInputStream => A): A = {
-      val stream = new DataInputStream(new FileInputStream(filePath))
-      val result = f(stream)
-      stream.close
-      result
-    }
+    def withCloseable[A <: Closeable, B](closeable: A)(f: A => B): B =
+      const(f(closeable))(closeable.close)
 
-    def withDataOutputStream[A](filePath: String)(f: DataOutputStream => A): A = {
-      val stream = new DataOutputStream(new FileOutputStream(filePath))
-      val result = f(stream)
-      stream.close
-      result
+    def withDataInputStream[A](filePath: String): (DataInputStream => A) => A =
+      withCloseable(new DataInputStream(new FileInputStream(filePath)))(_)
+
+    def withDataOutputStream[A](filePath: String): (DataOutputStream => A) => A = {
+      withCloseable(new DataOutputStream(new FileOutputStream(filePath)))(_)
     }
   }
 }
