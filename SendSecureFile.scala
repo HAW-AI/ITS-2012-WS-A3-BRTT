@@ -1,6 +1,4 @@
-import scala.io.Source
 import crypto._
-import scala.io.UTF8Codec
 
 object SendSecureFile extends App {
   if (args.length != 4) {

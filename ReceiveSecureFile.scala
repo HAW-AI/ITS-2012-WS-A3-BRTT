@@ -1,4 +1,3 @@
-import java.io.FileOutputStream
 import crypto._
 
 object ReceiveSecureFile extends App {
