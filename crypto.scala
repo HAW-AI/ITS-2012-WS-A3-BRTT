@@ -67,9 +67,8 @@ object crypto {
       generator.generateKey
     }
 
-    def decodeSecretKey(encodedKey: Array[Byte]): SecretKey = {
+    def decodeSecretKey(encodedKey: Array[Byte]): SecretKey =
       new SecretKeySpec(encodedKey, "AES")
-    }
   }
 
   object io {
@@ -120,17 +119,14 @@ object crypto {
       }
     }
 
-    def readStream(stream : InputStream) : Array[Byte] = {
+    def readStream(stream : InputStream) : Array[Byte] =
       Stream.continually(stream.read()).takeWhile(-1 !=).map(_.toByte).toArray
-    }
 
-    def readFile(filePath: String): Array[Byte] = {
+    def readFile(filePath: String): Array[Byte] =
       withDataInputStream(filePath)(readStream)
-    }
 
-    def writeFile(filePath: String, data: Array[Byte]): Unit = {
+    def writeFile(filePath: String, data: Array[Byte]): Unit =
       withDataOutputStream(filePath)(_.write(data))
-    }
 
     def withCloseable[A <: Closeable, B](closeable: A)(f: A => B): B =
       const(f(closeable))(closeable.close)
@@ -138,8 +134,7 @@ object crypto {
     def withDataInputStream[A](filePath: String): (DataInputStream => A) => A =
       withCloseable(new DataInputStream(new FileInputStream(filePath)))(_)
 
-    def withDataOutputStream[A](filePath: String): (DataOutputStream => A) => A = {
+    def withDataOutputStream[A](filePath: String): (DataOutputStream => A) => A =
       withCloseable(new DataOutputStream(new FileOutputStream(filePath)))(_)
-    }
   }
 }
