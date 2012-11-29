@@ -119,7 +119,7 @@ object crypto {
       }
     }
 
-    def readStream(stream : InputStream) : Array[Byte] =
+    def readStream(stream: InputStream): Array[Byte] =
       Stream.continually(stream.read()).takeWhile(-1 !=).map(_.toByte).toArray
 
     def readFile(filePath: String): Array[Byte] =
