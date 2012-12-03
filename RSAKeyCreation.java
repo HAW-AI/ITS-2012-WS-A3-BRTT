@@ -1,13 +1,14 @@
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAKeyGenParameterSpec;
@@ -33,30 +34,39 @@ public class RSAKeyCreation {
 		// Beispiel: java RSAKeyCreation KMueller
 		// erzeugt die Ausgabedateien KMueller.pub und  KMueller.prv
 		RSAKeyGenParameterSpec rsaKeyGenParameterSpec = new RSAKeyGenParameterSpec(1024, RSAKeyGenParameterSpec.F4);
-		
 		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
 		keyPairGenerator.initialize(rsaKeyGenParameterSpec);
 		
 		KeyPair keyPair = keyPairGenerator.generateKeyPair();
 		KeyFactory keyFac = KeyFactory.getInstance("RSA");
 		
-		X509EncodedKeySpec x509 = new X509EncodedKeySpec(keyPair.getPublic().getEncoded());
-		PKCS8EncodedKeySpec pkcs8 = new PKCS8EncodedKeySpec(keyPair.getPrivate().getEncoded());
+		X509EncodedKeySpec pubKey = keyFac.getKeySpec(keyPair.getPublic(), X509EncodedKeySpec.class);
+		PKCS8EncodedKeySpec prvKey = keyFac.getKeySpec(keyPair.getPrivate(), PKCS8EncodedKeySpec.class);
 		
-		PublicKey pubKey = keyFac.generatePublic(x509);
-		PrivateKey prvKey = keyFac.generatePrivate(pkcs8);
+		byte[] pubEncoded = pubKey.getEncoded();
+		byte[] prvEncoded = prvKey.getEncoded();
 		
-		File pub = new File(String.format("%s.pub",name));
-		File prv = new File(String.format("%s.prv",name));
+		ObjectOutputStream pubOut = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(String.format("%s.pub",name))));
+		ObjectOutputStream prvOut = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(String.format("%s.prv",name))));
 		
-		FileWriter pubWriter = new FileWriter(pub);
-		FileWriter prvWriter = new FileWriter(prv);
+		// 1. Länge des Inhaber-Namens (integer)
+		pubOut.write(name.getBytes().length);
+		prvOut.write(name.getBytes().length);
 		
-		pubWriter.write(pubKey.toString());
-		prvWriter.write(prvKey.toString());
+		// 2. Inhaber-Name (Bytefolge)
+		pubOut.write(name.getBytes());
+		prvOut.write(name.getBytes());
 		
-		pubWriter.close();
-		prvWriter.close();
+		// 3. Länge des Schlüssels (integer)
+		pubOut.write(pubEncoded.length);
+		prvOut.write(prvEncoded.length);
+		
+		// 4. Schlüssel (Bytefolge)
+		pubOut.write(pubEncoded); // [X.509-Format]
+		prvOut.write(prvEncoded); // [PKCS8-Format]
+		
+		// close
+		pubOut.close();
+		prvOut.close();
 	}
-
 }
