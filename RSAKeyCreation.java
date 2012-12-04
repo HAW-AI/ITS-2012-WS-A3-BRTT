@@ -1,4 +1,5 @@
 import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -13,6 +14,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
 
 public class RSAKeyCreation {
@@ -46,20 +48,20 @@ public class RSAKeyCreation {
 		byte[] pubEncoded = pubKey.getEncoded();
 		byte[] prvEncoded = prvKey.getEncoded();
 		
-		ObjectOutputStream pubOut = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(String.format("%s.pub",name))));
-		ObjectOutputStream prvOut = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(String.format("%s.prv",name))));
+		DataOutputStream pubOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(String.format("%s.pub",name))));
+		DataOutputStream prvOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(String.format("%s.prv",name))));
 		
 		// 1. Länge des Inhaber-Namens (integer)
-		pubOut.write((int)name.getBytes().length);
-		prvOut.write((int)name.getBytes().length);
+		pubOut.writeInt(name.getBytes().length -1);
+		prvOut.writeInt(name.getBytes().length -1);
 		
 		// 2. Inhaber-Name (Bytefolge)
-		pubOut.write(name.getBytes());
-		prvOut.write(name.getBytes());
+		pubOut.writeBytes(name);
+		prvOut.writeBytes(name);
 		
 		// 3. Länge des Schlüssels (integer)
-		pubOut.write((int)pubEncoded.length);
-		prvOut.write((int)prvEncoded.length);
+		pubOut.writeInt(pubEncoded.length);
+		prvOut.writeInt(prvEncoded.length);
 		
 		// 4. Schlüssel (Bytefolge)
 		pubOut.write(pubEncoded); // [X.509-Format]
