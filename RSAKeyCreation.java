@@ -52,8 +52,8 @@ public class RSAKeyCreation {
 		DataOutputStream prvOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(String.format("%s.prv",name))));
 		
 		// 1. LŠnge des Inhaber-Namens (integer)
-		pubOut.writeInt(name.getBytes().length -1);
-		prvOut.writeInt(name.getBytes().length -1);
+		pubOut.writeInt(name.getBytes().length);
+		prvOut.writeInt(name.getBytes().length);
 		
 		// 2. Inhaber-Name (Bytefolge)
 		pubOut.writeBytes(name);
