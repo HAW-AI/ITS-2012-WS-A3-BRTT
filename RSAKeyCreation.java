@@ -50,16 +50,16 @@ public class RSAKeyCreation {
 		ObjectOutputStream prvOut = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(String.format("%s.prv",name))));
 		
 		// 1. Länge des Inhaber-Namens (integer)
-		pubOut.write(name.getBytes().length);
-		prvOut.write(name.getBytes().length);
+		pubOut.write((int)name.getBytes().length);
+		prvOut.write((int)name.getBytes().length);
 		
 		// 2. Inhaber-Name (Bytefolge)
 		pubOut.write(name.getBytes());
 		prvOut.write(name.getBytes());
 		
 		// 3. Länge des Schlüssels (integer)
-		pubOut.write(pubEncoded.length);
-		prvOut.write(prvEncoded.length);
+		pubOut.write((int)pubEncoded.length);
+		prvOut.write((int)prvEncoded.length);
 		
 		// 4. Schlüssel (Bytefolge)
 		pubOut.write(pubEncoded); // [X.509-Format]
